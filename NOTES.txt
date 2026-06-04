@@ -1,0 +1,17 @@
+## Observations / Notes
+
+- The https://www.cia.gov/readingroom/ uses redirect-based bot protection.
+  Direct HTTP requests (e.g. via the `requests` library) result in `requests.exceptions.TooManyRedirects`,
+  so a real browser session is required.
+
+- I opted for Selenium attached to a running Chrome instance (via remote debugger on 127.0.0.1:9222) to bypass
+  the redirect protection and scrape page content as a real user would see it.
+
+- Alternatives tested and ruled out:
+    - requests.Session(): Hits TooManyRedirects.
+      The site uses a JS challenge to set cookies, which requests cannot execute.
+
+    - Playwright (headless Chromium): Also hits ERR_TOO_MANY_REDIRECTS.
+      The site likely detects automation via TLS fingerprinting or browser automation flags, rejecting fresh
+      headless browser instances.
+

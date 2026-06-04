@@ -4,15 +4,7 @@ from selenium.webdriver.chrome.options import Options
 import time
 import subprocess
 
-SEARCH_KEYWORD = "stargate"
-BASE_URL = "https://www.cia.gov/readingroom/"
-SEARCH_BASE = f"https://www.cia.gov/readingroom/search/site/{SEARCH_KEYWORD}"
-PAGES_TO_SCRAPE = 4
-
-# Chrome related
-CHROME_PATH = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-CHROME_DEBUG_PORT = 9222
-CHROME_PROFILE_DIR = r"C:\chrome-debug-profile"
+from config import CHROME_PATH, CHROME_DEBUG_PORT, CHROME_PROFILE_DIR, BASE_URL
 
 
 def launch_chrome():
