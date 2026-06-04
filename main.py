@@ -1,16 +1,52 @@
-# This is a sample Python script.
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import time
+import subprocess
+
+SEARCH_KEYWORD = "stargate"
+BASE_URL = "https://www.cia.gov/readingroom/"
+SEARCH_BASE = f"https://www.cia.gov/readingroom/search/site/{SEARCH_KEYWORD}"
+PAGES_TO_SCRAPE = 4
+
+# Chrome related
+CHROME_PATH = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+CHROME_DEBUG_PORT = 9222
+CHROME_PROFILE_DIR = r"C:\chrome-debug-profile"
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+def launch_chrome():
+    """Launch Chrome with remote debugging enabled."""
+    print("Launching Chrome...")
+    subprocess.Popen([
+        CHROME_PATH,
+        f"--remote-debugging-port={CHROME_DEBUG_PORT}",
+        f"--user-data-dir={CHROME_PROFILE_DIR}"
+    ])
 
 
-# Press the green button in the gutter to run the script.
+def get_driver():
+    options = Options()
+    options.add_experimental_option("debuggerAddress", f"127.0.0.1:{CHROME_DEBUG_PORT}")
+    return webdriver.Chrome(options=options)
+
+
+def navigate_to_root(driver):
+    """Navigate to the CIA Reading Room root page to establish session cookie."""
+    print(f"Navigating to root page: {BASE_URL}")
+    driver.get(BASE_URL)
+    time.sleep(2)
+    print(f"Current URL: {driver.current_url}")
+
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    try:
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+        launch_chrome()
+        time.sleep(2)
+
+        web_driver = get_driver()
+        navigate_to_root(web_driver)
+
+    except FileNotFoundError:
+        print(f"Chrome not found at: {CHROME_PATH}")
