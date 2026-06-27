@@ -7,6 +7,9 @@ import time
 import subprocess
 
 from config import CHROME_PATH, CHROME_DEBUG_PORT, CHROME_PROFILE_DIR, BASE_URL, SEARCH_BASE, OUTPUT_FILE
+from document_parser import parse_document
+
+DOC_URL = "https://www.cia.gov/readingroom/document/cia-rdp96-00788r001900760001-9"
 
 
 def launch_chrome():
@@ -89,6 +92,15 @@ if __name__ == '__main__':
         results = scrap_cia_search_page(web_driver)
 
         save_to_csv(results, OUTPUT_FILE)
+
+        '''
+        print(f"Navigating to document page: {DOC_URL}")
+        web_driver.get(DOC_URL)
+        time.sleep(3)
+
+        doc_data = parse_document(web_driver.page_source)
+        print(f"Content: {doc_data.body}")
+        '''
 
     except FileNotFoundError:
         print(f"Chrome not found at: {CHROME_PATH}")
