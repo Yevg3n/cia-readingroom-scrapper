@@ -14,7 +14,10 @@ class Document:
 
 
 def _get_field(soup, field_class):
-    return soup.select_one(f"div.{field_class} .field-item").get_text(strip=True)
+    tag = soup.select_one(f"div.{field_class} .field-item")
+    if tag:
+        return tag.get_text(strip=True)
+    return "N/A"
 
 
 def parse_document(page_source):
@@ -27,6 +30,6 @@ def parse_document(page_source):
         title = title,
         publication_date = _get_field(soup, "field-name-field-pub-date"),
         content_type = _get_field(soup, "field-name-field-content-type"),
-        pdf_url=pdf_url,
+        pdf_url = pdf_url,
         body = body
     )
