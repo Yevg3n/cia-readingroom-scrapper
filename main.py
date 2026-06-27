@@ -1,3 +1,7 @@
+import base64
+import os
+from pathlib import Path
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
@@ -10,6 +14,13 @@ from config import CHROME_PATH, CHROME_DEBUG_PORT, CHROME_PROFILE_DIR, BASE_URL,
 from document_parser import parse_document
 
 DOC_URL = "https://www.cia.gov/readingroom/document/cia-rdp96-00788r001900760001-9"
+OUTPUT_PATH = "documents/pdfs"
+
+
+def directory_setup(path: str | Path) -> Path:
+    path = Path(path)
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 def launch_chrome():
@@ -77,8 +88,42 @@ def save_to_csv(records, filename):
     print(f"\nSaved {len(records)} records to '{filename}'")
 
 
+def fetch_pdf_via_js(driver, pdf_url):
+    """
+    Use browser-side fetch() to get the PDF as base64, then write to disk.
+    Since the fetch runs inside Chrome with the active session cookies,
+    it bypasses the redirect protection.
+    """
+    print(f"Fetching PDF via browser fetch(): {pdf_url}")
+    pdf_b64 = driver.execute_async_script("""
+        var url = arguments[0];
+        var callback = arguments[arguments.length - 1];
+        fetch(url)
+            .then(function(r) { return r.blob(); })
+            .then(function(blob) {
+                var reader = new FileReader();
+                reader.onloadend = function() {
+                    callback(reader.result.split(',')[1]);
+                };
+                reader.readAsDataURL(blob);
+            })
+            .catch(function(err) {
+                callback(null);
+            });
+    """, pdf_url)
+    return pdf_b64
+
+
+def save_pdf(pdf_b64, filename):
+    filepath = os.path.join(OUTPUT_PATH, filename)
+
+    with open(filepath, "wb") as f:
+        f.write(base64.b64decode(pdf_b64))
+
+
 if __name__ == '__main__':
     try:
+        directory_setup(OUTPUT_PATH)
 
         launch_chrome()
         time.sleep(2)
@@ -93,14 +138,18 @@ if __name__ == '__main__':
 
         save_to_csv(results, OUTPUT_FILE)
 
-        '''
         print(f"Navigating to document page: {DOC_URL}")
         web_driver.get(DOC_URL)
         time.sleep(3)
 
         doc_data = parse_document(web_driver.page_source)
-        print(f"Content: {doc_data.body}")
-        '''
+        pdf = fetch_pdf_via_js(web_driver, doc_data.pdf_url)
+
+        if pdf:
+            pdf_name = doc_data.pdf_url.split("/")[-1]
+            save_pdf(pdf, pdf_name)
+        else:
+            print("Failed to fetch PDF.")
 
     except FileNotFoundError:
         print(f"Chrome not found at: {CHROME_PATH}")
