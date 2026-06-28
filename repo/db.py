@@ -55,6 +55,11 @@ def save_results(records, db_path = DB_PATH):
         print(f"Saved {len(records)} records to '{db_path}'")
 
 
+def get_all_search_results(db_path = DB_PATH):
+    with get_connection(db_path) as conn:
+        return conn.execute("SELECT id, title, link FROM search_results").fetchall()
+
+
 def save_documents(documents, db_path = DB_PATH):
     """documents: list of Document dataclass instances"""
     with get_connection(db_path) as conn:

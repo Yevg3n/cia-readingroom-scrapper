@@ -1,17 +1,5 @@
 from bs4 import BeautifulSoup
-from dataclasses import dataclass
-
-OUTPUT_DIR = "document"
-
-
-@dataclass
-class Document:
-    id: str
-    title: str
-    publication_date: str
-    content_type: str
-    pdf_url: str
-    body: str
+from repo.models.document import Document
 
 
 def extract_doc_id(url):

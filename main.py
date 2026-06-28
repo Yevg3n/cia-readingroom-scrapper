@@ -1,5 +1,6 @@
 import base64
 import os
+from dataclasses import dataclass
 from pathlib import Path
 
 from selenium import webdriver
@@ -11,10 +12,17 @@ import time
 import subprocess
 
 from config import CHROME_PATH, CHROME_DEBUG_PORT, CHROME_PROFILE_DIR, BASE_URL, SEARCH_BASE, OUTPUT_FILE
-from repo.db import init_db, save_results
+from document_parser import parse_document
+from repo.db import init_db, save_results, get_all_search_results
 
-DOC_URL = "https://www.cia.gov/readingroom/document/cia-rdp96-00788r001900760001-9"
 OUTPUT_PATH = "documents/pdfs"
+
+
+@dataclass
+class SearchResult:
+    id: str
+    title: str
+    link: str
 
 
 def directory_setup(path: str | Path) -> Path:
@@ -114,6 +122,20 @@ def fetch_pdf_via_js(driver, pdf_url):
     return pdf_b64
 
 
+def scrap_documents(driver):
+    rows = get_all_search_results()
+    search_results = [SearchResult(id=row[0], title=row[1], link=row[2]) for row in rows]
+
+    documents = []
+    for search_result in search_results:
+        print(f"Navigating to document page: {search_result.link}")
+        driver.get(search_result.link)
+        time.sleep(3)
+        documents.append(parse_document(driver.page_source, search_result.link))
+
+    return documents
+
+
 def save_pdf(pdf_b64, filename):
     filepath = os.path.join(OUTPUT_PATH, filename)
 
@@ -140,9 +162,8 @@ if __name__ == '__main__':
         save_to_csv(results, OUTPUT_FILE)
         save_results(results)
 
-        print(f"Navigating to document page: {DOC_URL}")
-        web_driver.get(DOC_URL)
-        time.sleep(3)
+        raw_documents = scrap_documents(web_driver)
+        print(f"END")
 
     except FileNotFoundError:
         print(f"Chrome not found at: {CHROME_PATH}")
