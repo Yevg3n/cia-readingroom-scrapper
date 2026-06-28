@@ -11,7 +11,7 @@ import time
 import subprocess
 
 from config import CHROME_PATH, CHROME_DEBUG_PORT, CHROME_PROFILE_DIR, BASE_URL, SEARCH_BASE, OUTPUT_FILE
-from document_parser import parse_document
+from repo.db import init_db, save_results
 
 DOC_URL = "https://www.cia.gov/readingroom/document/cia-rdp96-00788r001900760001-9"
 OUTPUT_PATH = "documents/pdfs"
@@ -124,6 +124,7 @@ def save_pdf(pdf_b64, filename):
 if __name__ == '__main__':
     try:
         directory_setup(OUTPUT_PATH)
+        init_db()
 
         launch_chrome()
         time.sleep(2)
@@ -137,19 +138,11 @@ if __name__ == '__main__':
         results = scrap_cia_search_page(web_driver)
 
         save_to_csv(results, OUTPUT_FILE)
+        save_results(results)
 
         print(f"Navigating to document page: {DOC_URL}")
         web_driver.get(DOC_URL)
         time.sleep(3)
-
-        doc_data = parse_document(web_driver.page_source)
-        pdf = fetch_pdf_via_js(web_driver, doc_data.pdf_url)
-
-        if pdf:
-            pdf_name = doc_data.pdf_url.split("/")[-1]
-            save_pdf(pdf, pdf_name)
-        else:
-            print("Failed to fetch PDF.")
 
     except FileNotFoundError:
         print(f"Chrome not found at: {CHROME_PATH}")

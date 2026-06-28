@@ -9,3 +9,6 @@ OUTPUT_FILE = f"cia_{SEARCH_KEYWORD}_results.csv"
 CHROME_PATH = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
 CHROME_DEBUG_PORT = 9222
 CHROME_PROFILE_DIR = r"C:\chrome-debug-profile"
+
+# SqLite Database
+DB_PATH = "project_stargate.db"
